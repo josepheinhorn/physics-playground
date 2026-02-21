@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Physics Playground</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --neon: #39ff14;
+    --neon-dim: #39ff1466;
+    --neon-glow: #39ff1433;
+    --bg-deep: #0a0a0a;
+    --bg-panel: #0d0f0d;
+    --bg-surface: #111311;
+    --bg-input: #0a0c0a;
+    --border: #1a2e1a;
+    --border-bright: #2a4a2a;
+    --text: #b0d4b0;
+    --text-dim: #5a7a5a;
+    --danger: #ff3939;
+    --warning: #ffc039;
+  }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-panel);
+    flex-shrink: 0;
+  }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .logo-icon {
+    width: 28px; height: 28px;
+    border: 2px solid var(--neon);
+    border-radius: 4px;
+    display: grid;
+    place-items: center;
+    font-size: 14px;
+    color: var(--neon);
+    text-shadow: 0 0 8px var(--neon-dim);
+    box-shadow: 0 0 12px var(--neon-glow);
+  }
+  .header h1 {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--neon);
+    text-shadow: 0 0 20px var(--neon-dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .header-status {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .status-dot {
+    width: 7px; height: 7px;
+    background: var(--neon);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--neon);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .fps-counter {
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--neon);
+    font-size: 11px;
+  }
+
+  /* ── MAIN LAYOUT ── */
+  .main {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 310px;
+    flex-shrink: 0;
+    background: var(--bg-panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-track { background: transparent; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--border-bright); border-radius: 2px; }
+
+  .panel-section {
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .panel-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .panel-title::before {
+    content: '>';
+    color: var(--neon);
+  }
+
+  /* ── SLIDER CONTROLS ── */
+  .control-row {
+    margin-bottom: 14px;
+  }
+  .control-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .control-label span {
+    font-size: 12px;
+    color: var(--text);
+  }
+  .control-value {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--neon);
+    background: var(--bg-input);
+    padding: 2px 8px;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    min-width: 52px;
+    text-align: center;
+  }
+
+  input[type="range"] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px; height: 14px;
+    background: var(--bg-deep);
+    border: 2px solid var(--neon);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--neon-dim);
+    cursor: pointer;
+    transition: box-shadow 0.2s;
+  }
+  input[type="range"]::-webkit-slider-thumb:hover {
+    box-shadow: 0 0 16px var(--neon-dim);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 14px; height: 14px;
+    background: var(--bg-deep);
+    border: 2px solid var(--neon);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--neon-dim);
+    cursor: pointer;
+  }
+
+  /* ── BUTTONS ── */
+  .btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding: 9px 16px;
+    border: 1px solid var(--border-bright);
+    background: var(--bg-input);
+    color: var(--text);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    width: 100%;
+    margin-bottom: 8px;
+  }
+  .btn:hover {
+    border-color: var(--neon);
+    color: var(--neon);
+    box-shadow: 0 0 12px var(--neon-glow);
+  }
+  .btn-primary {
+    background: var(--neon);
+    color: var(--bg-deep);
+    border-color: var(--neon);
+    font-weight: 700;
+  }
+  .btn-primary:hover {
+    background: #4dff2a;
+    color: var(--bg-deep);
+    box-shadow: 0 0 20px var(--neon-dim);
+  }
+  .btn-danger {
+    border-color: #4a1a1a;
+    color: #ff6b6b;
+  }
+  .btn-danger:hover {
+    border-color: var(--danger);
+    color: var(--danger);
+    box-shadow: 0 0 12px #ff393933;
+  }
+
+  /* ── KEYBIND DISPLAY ── */
+  .keybind-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .keybind {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .key {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px; height: 24px;
+    padding: 0 5px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-bright);
+    border-radius: 3px;
+    font-size: 10px;
+    color: var(--neon);
+    font-family: 'Share Tech Mono', monospace;
+  }
+  .key.active {
+    background: var(--neon);
+    color: var(--bg-deep);
+    box-shadow: 0 0 10px var(--neon-dim);
+    border-color: var(--neon);
+  }
+
+  /* ── CANVAS AREA ── */
+  .canvas-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+  .canvas-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+  .canvas-toolbar-left {
+    display: flex;
+    gap: 16px;
+    color: var(--text-dim);
+  }
+  .canvas-toolbar-left span strong {
+    color: var(--neon);
+  }
+  .canvas-wrapper {
+    flex: 1;
+    position: relative;
+    background:
+      radial-gradient(ellipse at 50% 100%, #0a1a0a 0%, transparent 70%),
+      var(--bg-deep);
+    overflow: hidden;
+  }
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* ── GROUND LINE ── */
+  .spawn-hint {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none;
+    opacity: 0.4;
+    transition: opacity 0.5s;
+  }
+  .spawn-hint.hidden { opacity: 0; }
+  .spawn-hint .hint-icon {
+    font-size: 36px;
+    color: var(--neon);
+    margin-bottom: 8px;
+    text-shadow: 0 0 20px var(--neon-dim);
+  }
+  .spawn-hint p {
+    font-size: 12px;
+    color: var(--text-dim);
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--bg-panel);
+    border: 1px solid var(--neon);
+    color: var(--neon);
+    padding: 12px 20px;
+    border-radius: 4px;
+    font-size: 12px;
+    box-shadow: 0 0 24px var(--neon-glow);
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 100;
+    font-family: 'Share Tech Mono', monospace;
+  }
+  .toast.show {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  /* ── JSON MODAL ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #000000cc;
+    z-index: 200;
+    place-items: center;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.open {
+    display: grid;
+  }
+  .modal {
+    background: var(--bg-panel);
+    border: 1px solid var(--neon);
+    border-radius: 6px;
+    padding: 24px;
+    width: 480px;
+    max-width: 90vw;
+    box-shadow: 0 0 60px var(--neon-glow);
+  }
+  .modal h2 {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    color: var(--neon);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .modal pre {
+    background: var(--bg-deep);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 16px;
+    font-size: 12px;
+    color: var(--neon);
+    overflow-x: auto;
+    margin-bottom: 16px;
+    line-height: 1.7;
+  }
+  .modal-actions {
+    display: flex;
+    gap: 8px;
+  }
+  .modal-actions .btn { margin-bottom: 0; }
+
+  /* ── SCANLINE OVERLAY ── */
+  .scanlines {
+    pointer-events: none;
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      #00000009 2px,
+      #00000009 4px
+    );
+  }
+
+  /* ── LOG OUTPUT ── */
+  .log-bar {
+    height: 32px;
+    background: var(--bg-panel);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+    gap: 10px;
+    overflow: hidden;
+  }
+  .log-bar .log-prefix {
+    color: var(--neon);
+    flex-shrink: 0;
+  }
+  .log-bar .log-msg {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ── PLATFORM EDITOR ── */
+  .platform-info {
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 4px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <div class="logo-icon">▶</div>
+    <h1>The Physics Playground</h1>
+  </div>
+  <div class="header-status">
+    <div class="fps-counter" id="fpsCounter">60 FPS</div>
+    <div class="status-dot"></div>
+    <span id="engineStatus">ENGINE RUNNING</span>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <!-- SPAWN -->
+    <div class="panel-section">
+      <div class="panel-title">Character</div>
+      <button class="btn btn-primary" id="btnSpawn">⚡ Spawn Character</button>
+      <button class="btn btn-danger" id="btnReset">↺ Reset Position</button>
+      <p class="platform-info" style="margin-top:8px;">Loads <strong style="color:var(--neon)">header.gif</strong> from the same folder.<br>Falls back to a placeholder sprite if not found.</p>
+    </div>
+
+    <!-- PHYSICS -->
+    <div class="panel-section">
+      <div class="panel-title">Physics</div>
+
+      <div class="control-row">
+        <div class="control-label">
+          <span>Gravity</span>
+          <span class="control-value" id="valGravity">980</span>
+        </div>
+        <input type="range" id="sliderGravity" min="0" max="3000" step="10" value="980">
+      </div>
+
+      <div class="control-row">
+        <div class="control-label">
+          <span>Jump Power</span>
+          <span class="control-value" id="valJump">480</span>
+        </div>
+        <input type="range" id="sliderJump" min="0" max="1500" step="10" value="480">
+      </div>
+
+      <div class="control-row">
+        <div class="control-label">
+          <span>Horizontal Speed</span>
+          <span class="control-value" id="valSpeed">320</span>
+        </div>
+        <input type="range" id="sliderSpeed" min="0" max="1000" step="10" value="320">
+      </div>
+
+      <div class="control-row">
+        <div class="control-label">
+          <span>Friction</span>
+          <span class="control-value" id="valFriction">0.85</span>
+        </div>
+        <input type="range" id="sliderFriction" min="0" max="100" step="1" value="85">
+      </div>
+    </div>
+
+    <!-- ENVIRONMENT -->
+    <div class="panel-section">
+      <div class="panel-title">Environment</div>
+      <div class="control-row">
+        <div class="control-label">
+          <span>Ground Height</span>
+          <span class="control-value" id="valGround">60</span>
+        </div>
+        <input type="range" id="sliderGround" min="20" max="200" step="5" value="60">
+      </div>
+      <div class="control-row" style="margin-bottom:6px;">
+        <label style="display:flex;align-items:center;gap:8px;font-size:12px;cursor:pointer;">
+          <input type="checkbox" id="chkPlatforms" checked style="accent-color:var(--neon)">
+          Show Platforms
+        </label>
+      </div>
+      <p class="platform-info">3 floating platforms for jump testing.</p>
+    </div>
+
+    <!-- KEYBINDS -->
+    <div class="panel-section">
+      <div class="panel-title">Controls</div>
+      <div class="keybind-grid">
+        <div class="keybind"><span class="key" id="kW">W</span> Jump</div>
+        <div class="keybind"><span class="key" id="kUp">↑</span> Jump</div>
+        <div class="keybind"><span class="key" id="kA">A</span> Left</div>
+        <div class="keybind"><span class="key" id="kLeft">←</span> Left</div>
+        <div class="keybind"><span class="key" id="kD">D</span> Right</div>
+        <div class="keybind"><span class="key" id="kRight">→</span> Right</div>
+        <div class="keybind"><span class="key" id="kS">S</span> Down</div>
+        <div class="keybind"><span class="key" id="kSpace">SPC</span> Jump</div>
+      </div>
+    </div>
+
+    <!-- EXPORT -->
+    <div class="panel-section">
+      <div class="panel-title">Export</div>
+      <button class="btn btn-primary" id="btnExport">⬡ Export JSON Config</button>
+      <button class="btn" id="btnCopyQuick">⎘ Quick Copy to Clipboard</button>
+    </div>
+
+  </div>
+
+  <!-- CANVAS -->
+  <div class="canvas-container">
+    <div class="canvas-toolbar">
+      <div class="canvas-toolbar-left">
+        <span>X: <strong id="posX">0</strong></span>
+        <span>Y: <strong id="posY">0</strong></span>
+        <span>VelX: <strong id="velX">0</strong></span>
+        <span>VelY: <strong id="velY">0</strong></span>
+        <span>Grounded: <strong id="grounded">false</strong></span>
+      </div>
+    </div>
+    <div class="canvas-wrapper">
+      <canvas id="gameCanvas"></canvas>
+      <div class="spawn-hint" id="spawnHint">
+        <div class="hint-icon">⌖</div>
+        <p>Click "Spawn Character" or press Enter</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOG BAR -->
+<div class="log-bar">
+  <span class="log-prefix">[LOG]</span>
+  <span class="log-msg" id="logMsg">Physics Playground initialized. Ready.</span>
+</div>
+
+<!-- SCANLINES -->
+<div class="scanlines"></div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- JSON MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <h2>⬡ Physics Config Export</h2>
+    <pre id="modalJson"></pre>
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="btnModalCopy">Copy to Clipboard</button>
+      <button class="btn" id="btnModalDownload">Download .json</button>
+      <button class="btn" id="btnModalClose">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── CANVAS SETUP ───
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+function resize() {
+  const r = canvas.parentElement.getBoundingClientRect();
+  canvas.width = r.width * devicePixelRatio;
+  canvas.height = r.height * devicePixelRatio;
+  canvas.style.width = r.width + 'px';
+  canvas.style.height = r.height + 'px';
+  ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+}
+window.addEventListener('resize', resize);
+resize();
+
+// ─── STATE ───
+const keys = {};
+let spawned = false;
+let charImg = null;
+let charLoaded = false;
+const CHAR_W = 48;
+const CHAR_H = 48;
+
+const physics = {
+  gravity: 980,
+  jumpPower: 480,
+  speed: 320,
+  friction: 0.85,
+  groundHeight: 60,
+  showPlatforms: true
+};
+
+const player = {
+  x: 0, y: 0,
+  vx: 0, vy: 0,
+  grounded: false,
+  facing: 1, // 1 = right, -1 = left
+  jumpHeld: false
+};
+
+const platforms = [
+  { x: 180, y: 0, w: 140, h: 12 },
+  { x: 420, y: 0, w: 120, h: 12 },
+  { x: 300, y: 0, w: 160, h: 12 },
+];
+
+function getCanvasSize() {
+  return { w: canvas.width / devicePixelRatio, h: canvas.height / devicePixelRatio };
+}
+
+function repositionPlatforms() {
+  const s = getCanvasSize();
+  const groundY = s.h - physics.groundHeight;
+  platforms[0].x = s.w * 0.15; platforms[0].y = groundY - 110;
+  platforms[1].x = s.w * 0.50; platforms[1].y = groundY - 190;
+  platforms[2].x = s.w * 0.32; platforms[2].y = groundY - 290;
+}
+
+// ─── LOAD CHARACTER ───
+function loadCharacter() {
+  const img = new Image();
+  img.onload = () => { charImg = img; charLoaded = true; log('header.gif loaded successfully.'); };
+  img.onerror = () => { charLoaded = false; log('header.gif not found — using placeholder sprite.'); };
+  img.src = 'header.gif';
+}
+loadCharacter();
+
+// ─── SLIDERS ───
+const sliders = {
+  gravity:  { el: document.getElementById('sliderGravity'),  val: document.getElementById('valGravity'),  key: 'gravity',  fmt: v => v },
+  jump:     { el: document.getElementById('sliderJump'),     val: document.getElementById('valJump'),     key: 'jumpPower', fmt: v => v },
+  speed:    { el: document.getElementById('sliderSpeed'),    val: document.getElementById('valSpeed'),    key: 'speed',     fmt: v => v },
+  friction: { el: document.getElementById('sliderFriction'), val: document.getElementById('valFriction'), key: 'friction',  fmt: v => (v / 100).toFixed(2) },
+  ground:   { el: document.getElementById('sliderGround'),   val: document.getElementById('valGround'),   key: 'groundHeight', fmt: v => v },
+};
+
+Object.values(sliders).forEach(s => {
+  s.el.addEventListener('input', () => {
+    const raw = Number(s.el.value);
+    const display = s.fmt(raw);
+    s.val.textContent = display;
+    if (s.key === 'friction') physics[s.key] = raw / 100;
+    else physics[s.key] = raw;
+  });
+});
+
+document.getElementById('chkPlatforms').addEventListener('change', e => {
+  physics.showPlatforms = e.target.checked;
+});
+
+// ─── KEYBOARD ───
+const keyMap = {
+  'KeyW': 'kW', 'ArrowUp': 'kUp',
+  'KeyA': 'kA', 'ArrowLeft': 'kLeft',
+  'KeyD': 'kD', 'ArrowRight': 'kRight',
+  'KeyS': 'kS', 'ArrowDown': 'kDown',
+  'Space': 'kSpace'
+};
+
+document.addEventListener('keydown', e => {
+  keys[e.code] = true;
+  const el = keyMap[e.code];
+  if (el) { const d = document.getElementById(el); if (d) d.classList.add('active'); }
+  if (e.code === 'Enter' && !spawned) spawn();
+  if (['Space', 'ArrowUp', 'ArrowDown'].includes(e.code)) e.preventDefault();
+});
+
+document.addEventListener('keyup', e => {
+  keys[e.code] = false;
+  const el = keyMap[e.code];
+  if (el) { const d = document.getElementById(el); if (d) d.classList.remove('active'); }
+});
+
+// ─── SPAWN / RESET ───
+function spawn() {
+  const s = getCanvasSize();
+  const groundY = s.h - physics.groundHeight;
+  player.x = s.w / 2 - CHAR_W / 2;
+  player.y = groundY - CHAR_H;
+  player.vx = 0; player.vy = 0;
+  player.grounded = false;
+  player.facing = 1;
+  spawned = true;
+  document.getElementById('spawnHint').classList.add('hidden');
+  log('Character spawned at (' + Math.round(player.x) + ', ' + Math.round(player.y) + ')');
+}
+
+document.getElementById('btnSpawn').addEventListener('click', spawn);
+document.getElementById('btnReset').addEventListener('click', () => {
+  if (spawned) { spawn(); log('Position reset.'); }
+});
+
+// ─── PHYSICS UPDATE ───
+function update(dt) {
+  if (!spawned) return;
+  const s = getCanvasSize();
+  const groundY = s.h - physics.groundHeight;
+
+  // Horizontal input
+  let inputX = 0;
+  if (keys['KeyA'] || keys['ArrowLeft']) { inputX = -1; player.facing = -1; }
+  if (keys['KeyD'] || keys['ArrowRight']) { inputX = 1; player.facing = 1; }
+
+  if (inputX !== 0) {
+    player.vx = inputX * physics.speed;
+  } else {
+    player.vx *= physics.friction;
+    if (Math.abs(player.vx) < 1) player.vx = 0;
+  }
+
+  // Jump
+  const jumpPressed = keys['KeyW'] || keys['ArrowUp'] || keys['Space'];
+  if (jumpPressed && player.grounded && !player.jumpHeld) {
+    player.vy = -physics.jumpPower;
+    player.grounded = false;
+    player.jumpHeld = true;
+    log('Jump! Vel: ' + (-physics.jumpPower).toFixed(0));
+  }
+  if (!jumpPressed) player.jumpHeld = false;
+
+  // Gravity
+  if (!player.grounded) {
+    player.vy += physics.gravity * dt;
+  }
+
+  // Move
+  player.x += player.vx * dt;
+  player.y += player.vy * dt;
+
+  // Ground collision
+  player.grounded = false;
+  if (player.y + CHAR_H >= groundY) {
+    player.y = groundY - CHAR_H;
+    player.vy = 0;
+    player.grounded = true;
+  }
+
+  // Platform collision (only falling down)
+  if (physics.showPlatforms && player.vy >= 0) {
+    for (const p of platforms) {
+      const withinX = player.x + CHAR_W > p.x && player.x < p.x + p.w;
+      const feetY = player.y + CHAR_H;
+      const prevFeetY = feetY - player.vy * dt;
+      if (withinX && prevFeetY <= p.y && feetY >= p.y) {
+        player.y = p.y - CHAR_H;
+        player.vy = 0;
+        player.grounded = true;
+      }
+    }
+  }
+
+  // Walls
+  if (player.x < 0) { player.x = 0; player.vx = 0; }
+  if (player.x + CHAR_W > s.w) { player.x = s.w - CHAR_W; player.vx = 0; }
+  if (player.y < 0) { player.y = 0; player.vy = 0; }
+
+  // HUD
+  document.getElementById('posX').textContent = Math.round(player.x);
+  document.getElementById('posY').textContent = Math.round(player.y);
+  document.getElementById('velX').textContent = player.vx.toFixed(0);
+  document.getElementById('velY').textContent = player.vy.toFixed(0);
+  document.getElementById('grounded').textContent = player.grounded;
+  document.getElementById('grounded').style.color = player.grounded ? '#39ff14' : '#ff6b6b';
+}
+
+// ─── RENDER ───
+function drawGrid(s) {
+  ctx.strokeStyle = '#112211';
+  ctx.lineWidth = 0.5;
+  const step = 40;
+  for (let x = 0; x < s.w; x += step) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, s.h); ctx.stroke();
+  }
+  for (let y = 0; y < s.h; y += step) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(s.w, y); ctx.stroke();
+  }
+}
+
+function drawGround(s) {
+  const groundY = s.h - physics.groundHeight;
+  // Ground surface line
+  ctx.strokeStyle = '#39ff14';
+  ctx.lineWidth = 2;
+  ctx.shadowColor = '#39ff14';
+  ctx.shadowBlur = 8;
+  ctx.beginPath();
+  ctx.moveTo(0, groundY);
+  ctx.lineTo(s.w, groundY);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Ground fill with gradient
+  const grd = ctx.createLinearGradient(0, groundY, 0, s.h);
+  grd.addColorStop(0, '#39ff1418');
+  grd.addColorStop(1, '#39ff1404');
+  ctx.fillStyle = grd;
+  ctx.fillRect(0, groundY, s.w, physics.groundHeight);
+
+  // Hash marks
+  ctx.strokeStyle = '#39ff1444';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < s.w; x += 20) {
+    ctx.beginPath();
+    ctx.moveTo(x, groundY);
+    ctx.lineTo(x + 10, groundY + 12);
+    ctx.stroke();
+  }
+}
+
+function drawPlatforms() {
+  if (!physics.showPlatforms) return;
+  for (const p of platforms) {
+    ctx.fillStyle = '#39ff1422';
+    ctx.fillRect(p.x, p.y, p.w, p.h);
+    ctx.strokeStyle = '#39ff14aa';
+    ctx.lineWidth = 1.5;
+    ctx.shadowColor = '#39ff14';
+    ctx.shadowBlur = 6;
+    ctx.strokeRect(p.x, p.y, p.w, p.h);
+    ctx.shadowBlur = 0;
+  }
+}
+
+function drawCharacter() {
+  if (!spawned) return;
+
+  ctx.save();
+  const cx = player.x + CHAR_W / 2;
+  const cy = player.y + CHAR_H / 2;
+  ctx.translate(cx, cy);
+  if (player.facing === -1) ctx.scale(-1, 1);
+  ctx.translate(-CHAR_W / 2, -CHAR_H / 2);
+
+  if (charLoaded && charImg) {
+    ctx.drawImage(charImg, 0, 0, CHAR_W, CHAR_H);
+  } else {
+    // Placeholder: neon sprite
+    // Body
+    ctx.fillStyle = '#39ff1444';
+    ctx.strokeStyle = '#39ff14';
+    ctx.lineWidth = 2;
+    ctx.shadowColor = '#39ff14';
+    ctx.shadowBlur = 10;
+
+    // Torso
+    ctx.fillRect(14, 12, 20, 20);
+    ctx.strokeRect(14, 12, 20, 20);
+
+    // Head
+    ctx.beginPath();
+    ctx.arc(24, 8, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Eyes
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#39ff14';
+    ctx.fillRect(21, 6, 3, 3);
+    ctx.fillRect(27, 6, 3, 3);
+
+    // Legs
+    ctx.strokeStyle = '#39ff14';
+    ctx.lineWidth = 2.5;
+    const legAnim = !player.grounded ? 0.3 : Math.sin(Date.now() * 0.012) * (Math.abs(player.vx) > 10 ? 0.4 : 0);
+    ctx.beginPath(); ctx.moveTo(20, 32); ctx.lineTo(16 - legAnim * 6, 46); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(28, 32); ctx.lineTo(32 + legAnim * 6, 46); ctx.stroke();
+
+    // Arms
+    const armAnim = !player.grounded ? -0.5 : -legAnim;
+    ctx.beginPath(); ctx.moveTo(14, 16); ctx.lineTo(8 + armAnim * 4, 28); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(34, 16); ctx.lineTo(40 - armAnim * 4, 28); ctx.stroke();
+
+    ctx.shadowBlur = 0;
+  }
+  ctx.restore();
+
+  // Shadow under player
+  const s = getCanvasSize();
+  const groundY = s.h - physics.groundHeight;
+  const dist = groundY - (player.y + CHAR_H);
+  const shadowAlpha = Math.max(0, 0.35 - dist * 0.002);
+  if (shadowAlpha > 0) {
+    ctx.fillStyle = `rgba(57, 255, 20, ${shadowAlpha})`;
+    const shadowW = CHAR_W * (1 - dist * 0.001);
+    ctx.beginPath();
+    ctx.ellipse(player.x + CHAR_W / 2, groundY, shadowW / 2, 3, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function render() {
+  const s = getCanvasSize();
+  ctx.clearRect(0, 0, s.w, s.h);
+  repositionPlatforms();
+  drawGrid(s);
+  drawGround(s);
+  drawPlatforms();
+  drawCharacter();
+}
+
+// ─── GAME LOOP ───
+let lastTime = 0;
+let frameCount = 0;
+let fpsTime = 0;
+
+function loop(timestamp) {
+  const dt = Math.min((timestamp - lastTime) / 1000, 0.05);
+  lastTime = timestamp;
+
+  // FPS
+  frameCount++;
+  fpsTime += dt;
+  if (fpsTime >= 0.5) {
+    document.getElementById('fpsCounter').textContent = Math.round(frameCount / fpsTime) + ' FPS';
+    frameCount = 0;
+    fpsTime = 0;
+  }
+
+  update(dt);
+  render();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(ts => { lastTime = ts; loop(ts); });
+
+// ─── EXPORT ───
+function getConfig() {
+  return {
+    physicsPlayground: {
+      version: "1.0",
+      exported: new Date().toISOString(),
+      physics: {
+        gravity: physics.gravity,
+        jumpPower: physics.jumpPower,
+        horizontalSpeed: physics.speed,
+        friction: physics.friction,
+        groundHeight: physics.groundHeight
+      },
+      character: {
+        width: CHAR_W,
+        height: CHAR_H,
+        sprite: "header.gif"
+      }
+    }
+  };
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+document.getElementById('btnExport').addEventListener('click', () => {
+  const json = JSON.stringify(getConfig(), null, 2);
+  document.getElementById('modalJson').textContent = json;
+  document.getElementById('modal').classList.add('open');
+  log('Config exported.');
+});
+
+document.getElementById('btnModalCopy').addEventListener('click', () => {
+  navigator.clipboard.writeText(document.getElementById('modalJson').textContent);
+  showToast('✓ Copied to clipboard');
+});
+
+document.getElementById('btnModalDownload').addEventListener('click', () => {
+  const blob = new Blob([document.getElementById('modalJson').textContent], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'physics-config.json'; a.click();
+  URL.revokeObjectURL(url);
+  showToast('✓ Downloaded physics-config.json');
+});
+
+document.getElementById('btnModalClose').addEventListener('click', () => {
+  document.getElementById('modal').classList.remove('open');
+});
+
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('modal'))
+    document.getElementById('modal').classList.remove('open');
+});
+
+document.getElementById('btnCopyQuick').addEventListener('click', () => {
+  navigator.clipboard.writeText(JSON.stringify(getConfig(), null, 2));
+  showToast('✓ Config copied to clipboard');
+  log('Quick copy to clipboard.');
+});
+
+// ─── LOG ───
+function log(msg) {
+  document.getElementById('logMsg').textContent = msg;
+}
+</script>
+</body>
+</html>
